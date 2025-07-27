@@ -19,6 +19,7 @@ const ModernAdSlider = () => {
   const [ads, setAds] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const theme = useTheme();
 
   useEffect(() => {
@@ -37,14 +38,14 @@ const ModernAdSlider = () => {
   }, []);
 
   useEffect(() => {
-    if (ads.length === 0) return;
+    if (ads.length === 0 || !isAutoPlaying) return;
     
     const interval = setInterval(() => {
       setCurrentIndex((prevIndex) => (prevIndex + 1) % ads.length);
     }, 5000);
     
     return () => clearInterval(interval);
-  }, [ads.length]);
+  }, [ads.length, isAutoPlaying]);
 
   const handleNext = () => {
     setCurrentIndex((prevIndex) => (prevIndex + 1) % ads.length);
@@ -52,6 +53,17 @@ const ModernAdSlider = () => {
 
   const handleBack = () => {
     setCurrentIndex((prevIndex) => (prevIndex - 1 + ads.length) % ads.length);
+  };
+
+  const handleKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key === 'ArrowLeft') {
+      handleBack();
+    } else if (event.key === 'ArrowRight') {
+      handleNext();
+    } else if (event.key === ' ') {
+      event.preventDefault();
+      setIsAutoPlaying(!isAutoPlaying);
+    }
   };
 
   if (loading) {
@@ -75,13 +87,18 @@ const ModernAdSlider = () => {
         overflow: 'hidden',
         boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
       }}
+      role="region"
+      aria-label="Carousel de publicités"
+      aria-live="polite"
+      onKeyDown={handleKeyDown}
+      tabIndex={0}
     >
       <Box sx={{ position: 'relative' }}>
         <CardMedia
           component="img"
           height={280}
           image={currentAd.image_url || currentAd.image}
-          alt={currentAd.title}
+          alt={`${currentAd.title} - ${currentAd.description}`}
           sx={{
             objectFit: 'cover',
             transition: 'all 0.7s ease-in-out',
@@ -102,6 +119,7 @@ const ModernAdSlider = () => {
         >
           <Typography 
             variant="h5" 
+            component="h2"
             sx={{ 
               fontWeight: 600, 
               mb: 1,
@@ -124,6 +142,7 @@ const ModernAdSlider = () => {
         {/* Navigation buttons */}
         <IconButton
           onClick={handleBack}
+          aria-label={`Publicité précédente (${currentIndex > 0 ? currentIndex : ads.length} sur ${ads.length})`}
           sx={{
             position: 'absolute',
             left: 16,
@@ -134,6 +153,10 @@ const ModernAdSlider = () => {
             '&:hover': {
               backgroundColor: 'rgba(0,0,0,0.7)',
             },
+            '&:focus': {
+              outline: '2px solid white',
+              outlineOffset: 2,
+            },
           }}
         >
           <KeyboardArrowLeft />
@@ -141,6 +164,7 @@ const ModernAdSlider = () => {
         
         <IconButton
           onClick={handleNext}
+          aria-label={`Publicité suivante (${currentIndex + 2 > ads.length ? 1 : currentIndex + 2} sur ${ads.length})`}
           sx={{
             position: 'absolute',
             right: 16,
@@ -150,6 +174,10 @@ const ModernAdSlider = () => {
             color: 'white',
             '&:hover': {
               backgroundColor: 'rgba(0,0,0,0.7)',
+            },
+            '&:focus': {
+              outline: '2px solid white',
+              outlineOffset: 2,
             },
           }}
         >
@@ -175,7 +203,24 @@ const ModernAdSlider = () => {
         }}
         nextButton={<div />}
         backButton={<div />}
+        aria-label={`Publicité ${currentIndex + 1} sur ${ads.length}`}
       />
+      
+      {/* Screen reader announcement */}
+      <Box
+        component="div"
+        sx={{
+          position: 'absolute',
+          left: '-10000px',
+          width: '1px',
+          height: '1px',
+          overflow: 'hidden',
+        }}
+        aria-live="polite"
+        aria-atomic="true"
+      >
+        Publicité {currentIndex + 1} sur {ads.length}: {currentAd.title}
+      </Box>
     </Card>
   );
 };
