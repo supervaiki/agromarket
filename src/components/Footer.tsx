@@ -1,60 +1,135 @@
 import React, { useState } from 'react';
-import { Info } from 'lucide-react';
+import { 
+  Box, 
+  Container, 
+  Typography, 
+  Link, 
+  IconButton, 
+  Tooltip, 
+  Chip,
+  useTheme 
+} from '@mui/material';
+import { Info as InfoIcon } from '@mui/icons-material';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
-  const [showName, setShowName] = useState(false);
+  const [showSignature, setShowSignature] = useState(false);
+  const theme = useTheme();
   
   return (
-    <footer className="bg-white border-t border-gray-200 py-4 relative">
-      <style jsx>{`
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(2px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .name-tooltip {
-          animation: fadeIn 0.3s ease-out forwards;
-        }
-      `}</style>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col md:flex-row justify-between items-center">
-          <div className="mb-4 md:mb-0">
-            <p className="text-gray-600 text-sm">
-              &copy; {currentYear} AgroMarket Tchad. Tous droits réservés.
-            </p>
-          </div>
-          <div className="flex space-x-6">
-            <a href="#" className="text-gray-500 hover:text-green-600 text-sm">
-              Conditions d'utilisation
-            </a>
-            <a href="#" className="text-gray-500 hover:text-green-600 text-sm">
-              Politique de confidentialité
-            </a>
-            <a href="#" className="text-gray-500 hover:text-green-600 text-sm">
-              Contact
-            </a>
-          </div>
-        </div>
-      </div>
-
-      {/* Signature discrète */}
-      <div className="absolute bottom-2 right-4 flex items-end gap-1">
-        {showName && (
-          <span className="name-tooltip text-xs text-gray-400 bg-white px-2 py-1 rounded shadow-sm">
-            djongnabe gueyake beni
-          </span>
-        )}
-        <button
-          onClick={() => setShowName(!showName)}
-          className="text-gray-400 hover:text-gray-600 transition-colors p-1"
-          aria-label="Signature"
-          title="Signature"
+    <Box
+      component="footer"
+      sx={{
+        borderTop: `1px solid ${theme.palette.divider}`,
+        py: 3,
+        backgroundColor: theme.palette.background.paper,
+        position: 'relative',
+      }}
+    >
+      <Container maxWidth="xl">
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: { xs: 'column', md: 'row' },
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            gap: 2,
+          }}
         >
-          <Info className="h-3 w-3" />
-        </button>
-      </div>
-    </footer>
+          <Typography variant="body2" color="text.secondary">
+            © {currentYear} AgroMarket Tchad. Tous droits réservés.
+          </Typography>
+          
+          <Box sx={{ display: 'flex', gap: 3 }}>
+            <Link
+              href="#"
+              color="text.secondary"
+              variant="body2"
+              sx={{
+                textDecoration: 'none',
+                '&:hover': {
+                  color: 'primary.main',
+                  textDecoration: 'underline',
+                },
+              }}
+            >
+              Conditions d'utilisation
+            </Link>
+            <Link
+              href="#"
+              color="text.secondary"
+              variant="body2"
+              sx={{
+                textDecoration: 'none',
+                '&:hover': {
+                  color: 'primary.main',
+                  textDecoration: 'underline',
+                },
+              }}
+            >
+              Politique de confidentialité
+            </Link>
+            <Link
+              href="#"
+              color="text.secondary"
+              variant="body2"
+              sx={{
+                textDecoration: 'none',
+                '&:hover': {
+                  color: 'primary.main',
+                  textDecoration: 'underline',
+                },
+              }}
+            >
+              Contact
+            </Link>
+          </Box>
+        </Box>
+      </Container>
+
+      {/* Developer Signature */}
+      <Box
+        sx={{
+          position: 'absolute',
+          bottom: 8,
+          right: 16,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1,
+        }}
+      >
+        {showSignature && (
+          <Chip
+            label="djongnabe gueyake beni"
+            size="small"
+            variant="outlined"
+            sx={{
+              fontSize: '0.75rem',
+              height: 24,
+              animation: 'fadeIn 0.3s ease-out',
+              '@keyframes fadeIn': {
+                from: { opacity: 0, transform: 'translateY(4px)' },
+                to: { opacity: 1, transform: 'translateY(0)' },
+              },
+            }}
+          />
+        )}
+        <Tooltip title="Signature du développeur">
+          <IconButton
+            size="small"
+            onClick={() => setShowSignature(!showSignature)}
+            sx={{
+              color: 'text.disabled',
+              '&:hover': {
+                color: 'text.secondary',
+              },
+            }}
+          >
+            <InfoIcon sx={{ fontSize: 16 }} />
+          </IconButton>
+        </Tooltip>
+      </Box>
+    </Box>
   );
 };
 

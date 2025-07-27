@@ -1,116 +1,232 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Menu, X } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Button,
+  IconButton,
+  Drawer,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Box,
+  useTheme,
+  useMediaQuery,
+  Avatar,
+} from '@mui/material';
+import {
+  Menu as MenuIcon,
+  Dashboard as DashboardIcon,
+  Store as StoreIcon,
+  Compare as CompareIcon,
+  TrendingUp as TrendingUpIcon,
+  Analytics as AnalyticsIcon,
+  Login as LoginIcon,
+  Close as CloseIcon,
+} from '@mui/icons-material';
 
 const Navbar = () => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const location = useLocation();
+
+  const handleDrawerToggle = () => {
+    setMobileOpen(!mobileOpen);
+  };
+
+  const menuItems = [
+    { path: '/', name: 'Tableau de bord', icon: <DashboardIcon /> },
+    { path: '/market-prices', name: 'Prix du marché', icon: <StoreIcon /> },
+    { path: '/price-comparison', name: 'Comparaison', icon: <CompareIcon /> },
+    { path: '/trend-prediction', name: 'Prédictions', icon: <TrendingUpIcon /> },
+    { path: '/market-analysis', name: 'Analyses', icon: <AnalyticsIcon /> },
+  ];
+
+  const isActiveRoute = (path: string) => {
+    return location.pathname === path;
+  };
+
+  const drawer = (
+    <Box sx={{ width: 280 }}>
+      <Box sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <Typography variant="h6" color="primary" fontWeight="bold">
+          AgroMarket
+        </Typography>
+        <IconButton onClick={handleDrawerToggle}>
+          <CloseIcon />
+        </IconButton>
+      </Box>
+      <List>
+        {menuItems.map((item) => (
+          <ListItem key={item.path} disablePadding>
+            <ListItemButton
+              component={Link}
+              to={item.path}
+              onClick={handleDrawerToggle}
+              selected={isActiveRoute(item.path)}
+              sx={{
+                mx: 1,
+                borderRadius: 1,
+                '&.Mui-selected': {
+                  backgroundColor: theme.palette.primary.main,
+                  color: 'white',
+                  '&:hover': {
+                    backgroundColor: theme.palette.primary.dark,
+                  },
+                  '& .MuiListItemIcon-root': {
+                    color: 'white',
+                  },
+                },
+              }}
+            >
+              <ListItemIcon sx={{ minWidth: 40 }}>
+                {item.icon}
+              </ListItemIcon>
+              <ListItemText primary={item.name} />
+            </ListItemButton>
+          </ListItem>
+        ))}
+        <ListItem sx={{ mt: 2 }}>
+          <Button
+            component="a"
+            href="https://agroapi-qwvb.onrender.com/admin"
+            target="_blank"
+            variant="outlined"
+            startIcon={<LoginIcon />}
+            fullWidth
+            sx={{ borderRadius: 2 }}
+          >
+            Se connecter
+          </Button>
+        </ListItem>
+      </List>
+    </Box>
+  );
 
   return (
-    <nav className="bg-green-700 text-white shadow-md sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          {/* Logo avec conteneur dédié pour meilleur contrôle */}
-          <div className="flex-shrink-0">
-            <Link to="/" className="inline-flex items-centr">
-              <img 
-                src="/logo.png" 
-                alt="AgroMarket" 
-                className="h-10 w-auto md:h-11 transition-all duration-200 hover:scale-105"
-                width={160}
-                height={40}
-                loading="eager"
-              />
-            </Link>
-          </div>
-
-          {/* Menu desktop - centré avec espacement amélioré */}
-          <div className="hidden md:flex flex-1 justify-center items-center space-x-2 lg:space-x-4 ml-4">
-            {[
-              { path: "/", name: "Tableau de bord" },
-              { path: "/market-prices", name: "Prix du marché" },
-              { path: "/price-comparison", name: "Comparaison" },
-              { path: "/trend-prediction", name: "Prédictions" },
-              { path: "/market-analysis", name: "Analyses" }
-            ].map((item) => (
-              <NavLink 
-                key={item.path}
-                to={item.path}
-                onClick={() => setIsOpen(false)}
+    <>
+      <AppBar 
+        position="sticky" 
+        sx={{ 
+          backgroundColor: 'white',
+          color: theme.palette.text.primary,
+          borderBottom: `1px solid ${theme.palette.divider}`,
+        }}
+      >
+        <Toolbar sx={{ justifyContent: 'space-between' }}>
+          {/* Logo */}
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            {isMobile && (
+              <IconButton
+                color="inherit"
+                aria-label="open drawer"
+                edge="start"
+                onClick={handleDrawerToggle}
+                sx={{ mr: 2 }}
               >
-                {item.name}
-              </NavLink>
-            ))}
-          </div>
+                <MenuIcon />
+              </IconButton>
+            )}
+            <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Avatar
+                  sx={{
+                    width: 40,
+                    height: 40,
+                    backgroundColor: theme.palette.primary.main,
+                    mr: 1,
+                    fontSize: '1.2rem',
+                    fontWeight: 'bold',
+                  }}
+                >
+                  A
+                </Avatar>
+                <Typography
+                  variant="h6"
+                  component="div"
+                  sx={{
+                    fontWeight: 'bold',
+                    color: theme.palette.primary.main,
+                    display: { xs: 'none', sm: 'block' },
+                  }}
+                >
+                  AgroMarket
+                </Typography>
+              </Box>
+            </Link>
+          </Box>
 
-          {/* Bouton connexion séparé */}
-          <div className="hidden md:block ml-4">
-            <NavLink 
-              to="https://agroapi-qwvb.onrender.com/admin"
-              className="bg-green-600 hover:bg-green-500 px-4 py-2 rounded-md"
+          {/* Desktop Navigation */}
+          {!isMobile && (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              {menuItems.map((item) => (
+                <Button
+                  key={item.path}
+                  component={Link}
+                  to={item.path}
+                  startIcon={item.icon}
+                  variant={isActiveRoute(item.path) ? 'contained' : 'text'}
+                  sx={{
+                    borderRadius: 2,
+                    textTransform: 'none',
+                    fontWeight: 500,
+                    px: 2,
+                    py: 1,
+                    color: isActiveRoute(item.path) ? 'white' : theme.palette.text.primary,
+                    '&:hover': {
+                      backgroundColor: isActiveRoute(item.path) 
+                        ? theme.palette.primary.dark 
+                        : theme.palette.action.hover,
+                    },
+                  }}
+                >
+                  {item.name}
+                </Button>
+              ))}
+            </Box>
+          )}
+
+          {/* Login Button */}
+          {!isMobile && (
+            <Button
+              component="a"
+              href="https://agroapi-qwvb.onrender.com/admin"
+              target="_blank"
+              variant="outlined"
+              startIcon={<LoginIcon />}
+              sx={{
+                borderRadius: 2,
+                textTransform: 'none',
+                fontWeight: 500,
+              }}
             >
               Se connecter
-            </NavLink>
-          </div>
+            </Button>
+          )}
+        </Toolbar>
+      </AppBar>
 
-          {/* Bouton mobile */}
-          <div className="md:hidden flex items-center">
-            <button
-              onClick={() => setIsOpen(!isOpen)}
-              className="p-2 rounded-md text-white hover:bg-green-600 focus:outline-none transition-colors"
-              aria-label="Menu"
-            >
-              {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-            </button>
-          </div>
-        </div>
-      </div>
-      
-      {/* Menu mobile optimisé */}
-      {isOpen && (
-        <div className="md:hidden bg-green-700 transition-all duration-300 ease-in-out">
-          <div className="px-2 pt-2 pb-4 space-y-2">
-            {[
-              { path: "/", name: "Tableau de bord" },
-              { path: "/market-prices", name: "Prix du marché" },
-              { path: "/price-comparison", name: "Comparaison" },
-              { path: "/trend-prediction", name: "Prédictions" },
-              { path: "/market-analysis", name: "Analyses" },
-              { path: "https://agroapi-qwvb.onrender.com/admin", name: "Se connecter" }
-            ].map((item) => (
-              <MobileNavLink 
-                key={item.path}
-                to={item.path}
-                onClick={() => setIsOpen(false)}
-              >
-                {item.name}
-              </MobileNavLink>
-            ))}
-          </div>
-        </div>
-      )}
-    </nav>
+      {/* Mobile Drawer */}
+      <Drawer
+        variant="temporary"
+        open={mobileOpen}
+        onClose={handleDrawerToggle}
+        ModalProps={{
+          keepMounted: true,
+        }}
+        sx={{
+          display: { xs: 'block', md: 'none' },
+          '& .MuiDrawer-paper': { boxSizing: 'border-box', width: 280 },
+        }}
+      >
+        {drawer}
+      </Drawer>
+    </>
   );
 };
-
-// Composants réutilisables
-const NavLink = ({ to, children, className = '', ...props }) => (
-  <Link
-    to={to}
-    className={`px-3 py-2 rounded-md hover:bg-green-600 transition-colors ${className}`}
-    {...props}
-  >
-    {children}
-  </Link>
-);
-
-const MobileNavLink = ({ to, children, ...props }) => (
-  <Link
-    to={to}
-    className="block px-3 py-2 rounded-md hover:bg-green-600 transition-colors text-sm"
-    {...props}
-  >
-    {children}
-  </Link>
-);
 
 export default Navbar;
