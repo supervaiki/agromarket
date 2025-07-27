@@ -1,81 +1,183 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import {
+  Box,
+  Card,
+  CardMedia,
+  Typography,
+  IconButton,
+  MobileStepper,
+  Skeleton,
+  useTheme,
+} from '@mui/material';
+import {
+  KeyboardArrowLeft,
+  KeyboardArrowRight,
+} from '@mui/icons-material';
+import { getAds } from '../api/api';
 
-const AdSlider = () => {
+const ModernAdSlider = () => {
   const [ads, setAds] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const theme = useTheme();
 
   useEffect(() => {
-    axios.get('https://agroapi-qwvb.onrender.com/ads/')
-      .then((response) => setAds(response.data))
-      .catch((error) => console.error('Erreur lors du chargement des publicités', error));
+    const fetchAds = async () => {
+      try {
+        const adsData = await getAds();
+        setAds(adsData);
+      } catch (error) {
+        console.error('Erreur lors du chargement des publicités', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAds();
   }, []);
 
   useEffect(() => {
+    if (ads.length === 0) return;
+    
     const interval = setInterval(() => {
-      nextSlide();
+      setCurrentIndex((prevIndex) => (prevIndex + 1) % ads.length);
     }, 5000);
+    
     return () => clearInterval(interval);
-  }, [currentIndex, ads]);
+  }, [ads.length]);
 
-  const nextSlide = () => {
+  const handleNext = () => {
     setCurrentIndex((prevIndex) => (prevIndex + 1) % ads.length);
   };
 
-  const prevSlide = () => {
+  const handleBack = () => {
     setCurrentIndex((prevIndex) => (prevIndex - 1 + ads.length) % ads.length);
   };
 
-  const goToSlide = (index) => {
-    setCurrentIndex(index);
-  };
+  if (loading) {
+    return (
+      <Card sx={{ position: 'relative', mb: 4 }}>
+        <Skeleton variant="rectangular" height={280} />
+      </Card>
+    );
+  }
 
   if (ads.length === 0) return null;
 
+  const currentAd = ads[currentIndex];
+
   return (
-    <div className="relative w-full h-60 md:h-72 bg-white shadow-lg rounded-xl overflow-hidden">
-      {/* Image slider */}
-      <img
-        src={ads[currentIndex].image_url}
-        alt={ads[currentIndex].title}
-        className="w-full h-full object-cover transition-all duration-700 ease-in-out"
+    <Card 
+      sx={{ 
+        position: 'relative', 
+        mb: 4,
+        borderRadius: 3,
+        overflow: 'hidden',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+      }}
+    >
+      <Box sx={{ position: 'relative' }}>
+        <CardMedia
+          component="img"
+          height={280}
+          image={currentAd.image_url || currentAd.image}
+          alt={currentAd.title}
+          sx={{
+            objectFit: 'cover',
+            transition: 'all 0.7s ease-in-out',
+          }}
+        />
+        
+        {/* Overlay with content */}
+        <Box
+          sx={{
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 50%, transparent 100%)',
+            color: 'white',
+            p: 3,
+          }}
+        >
+          <Typography 
+            variant="h5" 
+            sx={{ 
+              fontWeight: 600, 
+              mb: 1,
+              textShadow: '0 2px 4px rgba(0,0,0,0.5)',
+            }}
+          >
+            {currentAd.title}
+          </Typography>
+          <Typography 
+            variant="body1" 
+            sx={{ 
+              opacity: 0.95,
+              textShadow: '0 1px 2px rgba(0,0,0,0.5)',
+            }}
+          >
+            {currentAd.description}
+          </Typography>
+        </Box>
+
+        {/* Navigation buttons */}
+        <IconButton
+          onClick={handleBack}
+          sx={{
+            position: 'absolute',
+            left: 16,
+            top: '50%',
+            transform: 'translateY(-50%)',
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            color: 'white',
+            '&:hover': {
+              backgroundColor: 'rgba(0,0,0,0.7)',
+            },
+          }}
+        >
+          <KeyboardArrowLeft />
+        </IconButton>
+        
+        <IconButton
+          onClick={handleNext}
+          sx={{
+            position: 'absolute',
+            right: 16,
+            top: '50%',
+            transform: 'translateY(-50%)',
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            color: 'white',
+            '&:hover': {
+              backgroundColor: 'rgba(0,0,0,0.7)',
+            },
+          }}
+        >
+          <KeyboardArrowRight />
+        </IconButton>
+      </Box>
+
+      {/* Stepper */}
+      <MobileStepper
+        steps={ads.length}
+        position="static"
+        activeStep={currentIndex}
+        sx={{
+          backgroundColor: 'transparent',
+          justifyContent: 'center',
+          py: 1,
+          '& .MuiMobileStepper-dot': {
+            mx: 0.5,
+          },
+          '& .MuiMobileStepper-dotActive': {
+            backgroundColor: theme.palette.primary.main,
+          },
+        }}
+        nextButton={<div />}
+        backButton={<div />}
       />
-
-      {/* Overlay for title and description */}
-      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4 text-white">
-        <h2 className="text-lg md:text-xl font-bold">{ads[currentIndex].title}</h2>
-        <p className="text-sm md:text-base">{ads[currentIndex].description}</p>
-      </div>
-
-      {/* Navigation buttons */}
-      <button
-        onClick={prevSlide}
-        className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 p-2 rounded-full text-white"
-      >
-        <ChevronLeft />
-      </button>
-      <button
-        onClick={nextSlide}
-        className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 p-2 rounded-full text-white"
-      >
-        <ChevronRight />
-      </button>
-
-      {/* Dots indicators */}
-      <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex space-x-2">
-        {ads.map((_, index) => (
-          <button
-            key={index}
-            onClick={() => goToSlide(index)}
-            className={`w-3 h-3 rounded-full ${
-              currentIndex === index ? 'bg-white' : 'bg-white/50'
-            }`}
-          />
-        ))}
-      </div>
-    </div>
+    </Card>
   );
 };
 
-export default AdSlider;
+export default ModernAdSlider;

@@ -1,11 +1,174 @@
 import React, { useEffect, useState } from 'react';
-import { BarChart2, AlertTriangle, Loader2 } from 'lucide-react'; // Ajout de Loader2
+import {
+  Box,
+  Typography,
+  Alert,
+  Grid,
+  Card,
+  CardContent,
+  Skeleton,
+  Container,
+  Chip,
+} from '@mui/material';
+import {
+  TrendingUp,
+  TrendingDown,
+  BarChart,
+  Store,
+  Analytics,
+  Warning,
+} from '@mui/icons-material';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import StatCard from '../components/StatCard';
-import PriceCard from '../components/PriceCard';
-import AdSlider from '../components/AdSlider';
+import ModernAdSlider from '../components/AdSlider';
 import { getMarketPrices, getProducts, getDashboardStats, getMarketInsights } from '../api/api.js';
+
+// Modern StatCard Component
+const ModernStatCard = ({ title, value, icon, change, changeLabel, color = 'primary' }) => {
+  const isPositive = change > 0;
+  
+  return (
+    <Card 
+      sx={{ 
+        height: '100%',
+        background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+        border: '1px solid rgba(0,0,0,0.05)',
+        transition: 'all 0.3s ease',
+        '&:hover': {
+          transform: 'translateY(-2px)',
+          boxShadow: '0 8px 25px rgba(0,0,0,0.1)',
+        }
+      }}
+    >
+      <CardContent sx={{ p: 3 }}>
+        <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+          <Box>
+            <Typography variant="h6" color="text.secondary" sx={{ fontSize: '0.875rem', mb: 1 }}>
+              {title}
+            </Typography>
+            <Typography variant="h4" sx={{ fontWeight: 600, mb: 1 }}>
+              {value}
+            </Typography>
+            {change !== undefined && (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                {isPositive ? (
+                  <TrendingUp sx={{ fontSize: '1rem', color: 'success.main' }} />
+                ) : (
+                  <TrendingDown sx={{ fontSize: '1rem', color: 'error.main' }} />
+                )}
+                <Typography 
+                  variant="body2" 
+                  color={isPositive ? 'success.main' : 'error.main'}
+                  sx={{ fontWeight: 500 }}
+                >
+                  {Math.abs(change)}% {changeLabel}
+                </Typography>
+              </Box>
+            )}
+          </Box>
+          <Box 
+            sx={{ 
+              backgroundColor: `${color}.light`,
+              borderRadius: 2,
+              p: 1.5,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            {icon}
+          </Box>
+        </Box>
+      </CardContent>
+    </Card>
+  );
+};
+
+// Modern PriceCard Component
+const ModernPriceCard = ({ product, price, currency, change, unit, market, date }) => {
+  const isPositive = change > 0;
+  
+  return (
+    <Card 
+      sx={{ 
+        mb: 2,
+        transition: 'all 0.3s ease',
+        '&:hover': {
+          transform: 'translateX(4px)',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+        }
+      }}
+    >
+      <CardContent sx={{ p: 3 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <Box sx={{ flex: 1 }}>
+            <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
+              {product}
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+              Marché: {market}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {new Date(date).toLocaleDateString('fr-FR')}
+            </Typography>
+          </Box>
+          <Box sx={{ textAlign: 'right' }}>
+            <Typography variant="h5" sx={{ fontWeight: 600, mb: 0.5 }}>
+              {price?.toLocaleString()} {currency}
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+              par {unit}
+            </Typography>
+            <Chip 
+              icon={isPositive ? <TrendingUp /> : <TrendingDown />}
+              label={`${isPositive ? '+' : ''}${change}%`}
+              color={isPositive ? 'success' : 'error'}
+              size="small"
+              variant="outlined"
+            />
+          </Box>
+        </Box>
+      </CardContent>
+    </Card>
+  );
+};
+
+// Modern OptimalMarket Component
+const OptimalMarketCard = ({ product, market, price, currency, unit }) => (
+  <Card 
+    sx={{ 
+      mb: 2,
+      background: 'linear-gradient(135deg, #e8f5e8 0%, #f1f8e9 100%)',
+      border: '1px solid rgba(76, 175, 80, 0.2)',
+      transition: 'all 0.3s ease',
+      '&:hover': {
+        transform: 'translateY(-2px)',
+        boxShadow: '0 8px 25px rgba(76, 175, 80, 0.15)',
+      }
+    }}
+  >
+    <CardContent sx={{ p: 3 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Box>
+          <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
+            {product}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Marché optimal: {market}
+          </Typography>
+        </Box>
+        <Box sx={{ textAlign: 'right' }}>
+          <Typography variant="h6" color="success.main" sx={{ fontWeight: 600 }}>
+            {price?.toLocaleString()} {currency}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            par {unit}
+          </Typography>
+        </Box>
+      </Box>
+    </CardContent>
+  </Card>
+);
 
 const Dashboard = () => {
   const [marketPrices, setMarketPrices] = useState([]);
@@ -14,12 +177,12 @@ const Dashboard = () => {
   const [marketInsights, setMarketInsights] = useState([]);
   const [recommendations, setRecommendations] = useState([]);
   const [displayedNotifications, setDisplayedNotifications] = useState(new Set());
-  const [loading, setLoading] = useState(true); // Nouvel état pour le loader
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        setLoading(true); // Activer le loader avant de commencer le chargement
+        setLoading(true);
         
         const pricesData = await getMarketPrices();
         const productsData = await getProducts();
@@ -51,11 +214,17 @@ const Dashboard = () => {
         insightsData.forEach((insight) => {
           if (!displayedNotifications.has(insight.id)) {
             toast.info(
-              <div>
-                <AlertTriangle style={{ color: 'yellow', marginRight: '8px' }} />
-                <strong>{insight.title}</strong>
-                <p>{insight.content}</p>
-              </div>,
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Warning color="warning" />
+                <Box>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                    {insight.title}
+                  </Typography>
+                  <Typography variant="body2">
+                    {insight.content}
+                  </Typography>
+                </Box>
+              </Box>,
               {
                 position: 'top-right',
                 autoClose: 5000,
@@ -70,8 +239,9 @@ const Dashboard = () => {
         });
       } catch (error) {
         console.error('Error fetching data:', error);
+        toast.error('Erreur lors du chargement des données');
       } finally {
-        setLoading(false); // Désactiver le loader une fois le chargement terminé
+        setLoading(false);
       }
     };
 
@@ -98,76 +268,135 @@ const Dashboard = () => {
     };
   }).filter(Boolean);
 
-  // Afficher le loader si loading est true
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen">
-        <Loader2 className="animate-spin h-12 w-12 text-blue-500" />
-      </div>
+      <Container maxWidth="xl">
+        <Box sx={{ py: 4 }}>
+          <Skeleton variant="rectangular" height={60} sx={{ mb: 3, borderRadius: 2 }} />
+          <Skeleton variant="text" height={40} width={300} sx={{ mb: 4 }} />
+          <Grid container spacing={3}>
+            {[1, 2, 3, 4].map((i) => (
+              <Grid item xs={12} sm={6} lg={3} key={i}>
+                <Skeleton variant="rectangular" height={120} sx={{ borderRadius: 2 }} />
+              </Grid>
+            ))}
+          </Grid>
+          <Grid container spacing={3} sx={{ mt: 2 }}>
+            <Grid item xs={12} lg={6}>
+              <Skeleton variant="rectangular" height={300} sx={{ borderRadius: 2 }} />
+            </Grid>
+            <Grid item xs={12} lg={6}>
+              <Skeleton variant="rectangular" height={300} sx={{ borderRadius: 2 }} />
+            </Grid>
+          </Grid>
+        </Box>
+      </Container>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <AdSlider />
-      
-      <div className="bg-blue-50 p-4 rounded-lg">
-        <p className="text-blue-700 text-sm">
+    <Container maxWidth="xl">
+      <Box sx={{ py: 4 }}>
+        {/* Ad Slider */}
+        <ModernAdSlider />
+        
+        {/* Welcome Banner */}
+        <Alert 
+          severity="info" 
+          sx={{ 
+            mb: 4, 
+            borderRadius: 2,
+            '& .MuiAlert-message': {
+              fontSize: '0.95rem',
+            }
+          }}
+        >
           Bienvenue sur le tableau de bord de gestion des prix ! Ici, vous pouvez consulter les produits clés,
           les marchés optimaux pour acheter ou vendre, et un aperçu général du marché.
-        </p>
-      </div>
+        </Alert>
 
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Tableau de bord</h1>
-      </div>
+        {/* Page Title */}
+        <Typography 
+          variant="h3" 
+          sx={{ 
+            fontWeight: 700, 
+            mb: 4,
+            background: 'linear-gradient(135deg, #2E7D32 0%, #4CAF50 100%)',
+            backgroundClip: 'text',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+          }}
+        >
+          Tableau de bord
+        </Typography>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {dashboardStats.map((stat, index) => (
-          <StatCard
-            key={index}
-            title={stat.title}
-            value={stat.value}
-            icon={<BarChart2 className="h-6 w-6" />}
-            change={stat.change}
-            changeLabel={stat.changeLabel}
-            color="green"
-          />
-        ))}
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        <div className="lg:col-span-2 space-y-4">
-          <h2 className="text-lg font-semibold">Prix des produits clés</h2>
-          {featuredPrices.map((item, index) => (
-            <PriceCard
-              key={index}
-              product={item.product}
-              price={item.price}
-              currency={item.currency}
-              change={item.change}
-              unit={item.unit}
-              market={item.market}
-              date={item.date}
-            />
+        {/* Stats Grid */}
+        <Grid container spacing={3} sx={{ mb: 4 }}>
+          {dashboardStats.map((stat, index) => (
+            <Grid item xs={12} sm={6} lg={3} key={index}>
+              <ModernStatCard
+                title={stat.title}
+                value={stat.value}
+                icon={
+                  index === 0 ? <BarChart sx={{ color: 'primary.main' }} /> :
+                  index === 1 ? <Store sx={{ color: 'secondary.main' }} /> :
+                  index === 2 ? <Analytics sx={{ color: 'success.main' }} /> :
+                  <TrendingUp sx={{ color: 'warning.main' }} />
+                }
+                change={stat.change}
+                changeLabel={stat.changeLabel}
+                color={index === 0 ? 'primary' : index === 1 ? 'secondary' : index === 2 ? 'success' : 'warning'}
+              />
+            </Grid>
           ))}
-        </div>
+        </Grid>
 
-        <div className="lg:col-span-2 space-y-4">
-          <h2 className="text-lg font-semibold">Marchés Optimaux</h2>
-          {recommendations.map((item, index) => (
-            <div key={index} className="bg-white p-4 rounded-lg shadow-md">
-              <h3 className="text-sm font-bold">{item.product}</h3>
-              <p>Marché : {item.market}</p>
-              <p>Prix : {item.price.toLocaleString()} {item.currency}</p>
-              <p>Unité : {item.unit}</p>
-            </div>
-          ))}
-        </div>
-      </div>
+        {/* Main Content Grid */}
+        <Grid container spacing={4}>
+          {/* Featured Products */}
+          <Grid item xs={12} lg={6}>
+            <Typography variant="h5" sx={{ fontWeight: 600, mb: 3 }}>
+              Prix des produits clés
+            </Typography>
+            <Box>
+              {featuredPrices.map((item, index) => (
+                <ModernPriceCard
+                  key={index}
+                  product={item.product}
+                  price={item.price}
+                  currency={item.currency}
+                  change={item.change}
+                  unit={item.unit}
+                  market={item.market}
+                  date={item.date}
+                />
+              ))}
+            </Box>
+          </Grid>
 
-      <ToastContainer />
-    </div>
+          {/* Optimal Markets */}
+          <Grid item xs={12} lg={6}>
+            <Typography variant="h5" sx={{ fontWeight: 600, mb: 3 }}>
+              Marchés Optimaux
+            </Typography>
+            <Box>
+              {recommendations.map((item, index) => (
+                <OptimalMarketCard
+                  key={index}
+                  product={item.product}
+                  market={item.market}
+                  price={item.price}
+                  currency={item.currency}
+                  unit={item.unit}
+                />
+              ))}
+            </Box>
+          </Grid>
+        </Grid>
+
+        <ToastContainer />
+      </Box>
+    </Container>
   );
 };
 
